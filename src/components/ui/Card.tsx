@@ -1,0 +1,33 @@
+import type { HTMLAttributes, ReactNode } from "react";
+
+import { cn } from "@/lib/utils";
+
+export function Card({
+  className,
+  flush,
+  ...props
+}: HTMLAttributes<HTMLDivElement> & { flush?: boolean }) {
+  return <div className={cn(flush ? "ui-card-flush" : "ui-card", className)} {...props} />;
+}
+
+export function CardHeader({
+  title,
+  description,
+  action,
+  className,
+}: {
+  title: ReactNode;
+  description?: ReactNode;
+  action?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex items-start justify-between gap-3 border-b border-line px-5 py-4", className)}>
+      <div>
+        <h2 className="text-base font-bold tracking-tight text-ink">{title}</h2>
+        {description ? <p className="mt-0.5 text-sm text-muted">{description}</p> : null}
+      </div>
+      {action}
+    </div>
+  );
+}

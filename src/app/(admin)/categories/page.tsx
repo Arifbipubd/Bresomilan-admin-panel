@@ -1,9 +1,10 @@
 "use client";
 
 import { Pencil } from "lucide-react";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
 
+import { CategoryModal } from "@/components/categories/CategoryModal";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ConfirmButton } from "@/components/ui/ConfirmButton";
@@ -11,16 +12,15 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { IconButton } from "@/components/ui/IconButton";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PAGE_SIZE, Pagination, paginate } from "@/components/ui/Pagination";
-import { createCategory, deleteCategory, fetchCategories, updateCategory } from "@/lib/api/admin";
+import { deleteCategory, fetchCategories } from "@/lib/api/admin";
 import type { AdminCategory } from "@/lib/types";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<AdminCategory[]>([]);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [editing, setEditing] = useState<AdminCategory | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState<AdminCategory | null>(null);
 
   async function reload() {
     setLoading(true);
@@ -37,24 +37,14 @@ export default function CategoriesPage() {
 
   const paged = useMemo(() => paginate(categories, page, PAGE_SIZE), [categories, page]);
 
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    try {
-      if (editing) {
-        await updateCategory(editing.slug, { name, description });
-        toast.success("Category updated");
-      } else {
-        await createCategory({ name, description });
-        toast.success("Category created");
-      }
-      setName("");
-      setDescription("");
-      setEditing(null);
-      setPage(1);
-      await reload();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Save failed");
-    }
+  function openCreate() {
+    setEditing(null);
+    setModalOpen(true);
+  }
+
+  function openEdit(category: AdminCategory) {
+    setEditing(category);
+    setModalOpen(true);
   }
 
   return (
@@ -63,49 +53,26 @@ export default function CategoriesPage() {
         eyebrow="Catalogue"
         title="Categories"
         description="Organize the storefront category tree."
+        actions={
+          <Button variant="accent" onClick={openCreate}>
+            New category
+          </Button>
+        }
       />
-
-      <Card className="mb-4 p-4">
-        <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-3">
-          <input
-            required
-            placeholder="Category name (e.g. Bags)"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="ui-input"
-          />
-          <input
-            placeholder="Short description (optional)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="ui-input"
-          />
-          <div className="flex gap-2">
-            <Button type="submit" variant="primary">
-              {editing ? "Update" : "Add category"}
-            </Button>
-            {editing ? (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  setEditing(null);
-                  setName("");
-                  setDescription("");
-                }}
-              >
-                Cancel
-              </Button>
-            ) : null}
-          </div>
-        </form>
-      </Card>
 
       <Card flush>
         {loading ? (
           <p className="px-5 py-8 text-sm text-muted">Loading…</p>
         ) : categories.length === 0 ? (
-          <EmptyState title="No categories" />
+          <EmptyState
+            title="No categories"
+            description="Create your first category."
+            action={
+              <Button variant="primary" onClick={openCreate}>
+                New category
+              </Button>
+            }
+          />
         ) : (
           <>
             <div className="overflow-x-auto">
@@ -121,7 +88,23 @@ export default function CategoriesPage() {
                 <tbody>
                   {paged.items.map((c) => (
                     <tr key={c.id}>
-                      <td className="font-bold">{c.name}</td>
+                      <td>
+                        <div className="flex items-center gap-3">
+                          {c.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={c.image}
+                              alt=""
+                              className="h-9 w-9 rounded-lg object-cover ring-1 ring-line"
+                            />
+                          ) : (
+                            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-400">
+                              {c.name.slice(0, 1).toUpperCase()}
+                            </span>
+                          )}
+                          <span className="font-bold">{c.name}</span>
+                        </div>
+                      </td>
                       <td className="text-muted">{c.slug}</td>
                       <td className="font-semibold">{c.order}</td>
                       <td>
@@ -129,11 +112,7 @@ export default function CategoriesPage() {
                           <IconButton
                             label="Edit category"
                             tone="primary"
-                            onClick={() => {
-                              setEditing(c);
-                              setName(c.name);
-                              setDescription(c.description);
-                            }}
+                            onClick={() => openEdit(c)}
                           >
                             <Pencil className="h-4 w-4" />
                           </IconButton>
@@ -167,6 +146,16 @@ export default function CategoriesPage() {
           </>
         )}
       </Card>
+
+      <CategoryModal
+        open={modalOpen}
+        category={editing}
+        onClose={() => setModalOpen(false)}
+        onSaved={async () => {
+          setPage(1);
+          await reload();
+        }}
+      />
     </div>
   );
 }

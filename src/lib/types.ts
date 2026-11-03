@@ -3,6 +3,7 @@ export type StaffUser = {
   email: string;
   name: string;
   phone: string;
+  avatar_url: string;
   avatar_initial: string;
   is_staff: boolean;
   is_superuser: boolean;
@@ -181,4 +182,20 @@ export type NewsletterSubscriber = {
   id: number;
   email: string;
   subscribed_at: string;
+};
+
+export type AdminNotificationItem = {
+  id: string;
+  type: "order" | "message";
+  title: string;
+  body: string;
+  created_at: string;
+  ref: string;
+};
+
+export type AdminNotifications = {
+  count: number;
+  new_orders_count: number;
+  unread_messages_count: number;
+  items: AdminNotificationItem[];
 };

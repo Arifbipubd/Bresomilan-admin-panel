@@ -21,8 +21,9 @@ function OrdersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialSearch = searchParams.get("search") ?? "";
+  const initialStatus = searchParams.get("status") ?? "";
   const [orders, setOrders] = useState<AdminOrderListItem[]>([]);
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState(initialStatus);
   const [search, setSearch] = useState(initialSearch);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -31,6 +32,10 @@ function OrdersContent() {
   useEffect(() => {
     setSearch(initialSearch);
   }, [initialSearch]);
+
+  useEffect(() => {
+    setStatus(initialStatus);
+  }, [initialStatus]);
 
   useEffect(() => {
     setPage(1);

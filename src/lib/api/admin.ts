@@ -6,6 +6,7 @@ import type {
   AdminOrderListItem,
   AdminProductDetail,
   AdminProductListItem,
+  AdminNotifications,
   ContactMessage,
   DashboardStats,
   NewsletterSubscriber,
@@ -35,8 +36,28 @@ export function fetchMe() {
   return http.get<StaffUser>("/admin/me/");
 }
 
+export function updateMyProfile(data: { name?: string; phone?: string } | FormData) {
+  if (data instanceof FormData) return http.patchForm<StaffUser>("/admin/me/", data);
+  return http.patch<StaffUser>("/admin/me/", data);
+}
+
+export function changeMyPassword(current_password: string, new_password: string) {
+  return http.post<{ detail: string }>("/admin/me/change-password/", {
+    current_password,
+    new_password,
+  });
+}
+
 export function fetchDashboard() {
   return http.get<DashboardStats>("/admin/dashboard/");
+}
+
+export function fetchNotifications() {
+  return http.get<AdminNotifications>("/admin/notifications/");
+}
+
+export function markNotificationRead(type: "order" | "message", ref: string) {
+  return http.post<{ detail: string }>("/admin/notifications/", { type, ref });
 }
 
 export function fetchOrders(params?: { status?: string; payment_status?: string; search?: string }) {

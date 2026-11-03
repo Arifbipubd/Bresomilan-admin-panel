@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { fetchMe, loginStaff, logoutStaff } from "@/lib/api/admin";
+import { fetchMe, loginStaff, logoutStaff, updateMyProfile } from "@/lib/api/admin";
 import { setOnSessionExpired } from "@/lib/api/token-store";
 import type { StaffUser } from "@/lib/types";
 
@@ -14,6 +14,8 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   refreshMe: () => Promise<void>;
+  setUser: (user: StaffUser) => void;
+  updateProfile: (data: { name?: string; phone?: string } | FormData) => Promise<StaffUser>;
   setHydrated: (value: boolean) => void;
 }
 
@@ -37,6 +39,14 @@ export const useAuthStore = create<AuthState>()(
       refreshMe: async () => {
         const user = await fetchMe();
         set({ user, isAuthenticated: true });
+      },
+
+      setUser: (user) => set({ user, isAuthenticated: true }),
+
+      updateProfile: async (data) => {
+        const user = await updateMyProfile(data);
+        set({ user });
+        return user;
       },
 
       setHydrated: (value) => set({ hydrated: value }),

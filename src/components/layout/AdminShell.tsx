@@ -1,15 +1,19 @@
 "use client";
 
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-import { SIDEBAR_WIDTH, Sidebar } from "@/components/layout/Sidebar";
+import { NotificationBell } from "@/components/layout/NotificationBell";
+import { Sidebar } from "@/components/layout/Sidebar";
 import { useAuthStore } from "@/lib/store/auth-store";
+import { SIDEBAR_COLLAPSED, SIDEBAR_EXPANDED, useSidebarStore } from "@/lib/store/sidebar-store";
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { isAuthenticated, hydrated } = useAuthStore();
+  const collapsed = useSidebarStore((s) => s.collapsed);
+  const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED;
 
   useEffect(() => {
     if (hydrated && !isAuthenticated) {
@@ -28,7 +32,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen">
       <Sidebar />
-      <div className="admin-canvas flex min-h-screen min-w-0 flex-col" style={{ marginLeft: SIDEBAR_WIDTH }}>
+      <div
+        className="admin-canvas flex min-h-screen min-w-0 flex-col transition-[margin] duration-200 ease-out"
+        style={{ marginLeft: sidebarWidth }}
+      >
         <header className="sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur-xl">
           <div className="flex h-[68px] items-center gap-4 px-5 sm:px-7">
             <div className="ui-search hidden min-w-0 flex-1 md:block md:max-w-md">
@@ -48,15 +55,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="ml-auto flex items-center gap-2">
-              <button
-                type="button"
-                className="relative rounded-xl bg-slate-100 p-2.5 text-slate-500 transition hover:bg-primary-50 hover:text-primary-600"
-                aria-label="Notifications"
-                onClick={() => router.push("/messages")}
-              >
-                <Bell className="h-4 w-4" />
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
-              </button>
+              <NotificationBell />
             </div>
           </div>
         </header>
